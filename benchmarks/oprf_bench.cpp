@@ -36,5 +36,6 @@ OPRF_BENCH(DeviceOutputHash,8);
 int main(int argc,char** argv) {
   initialize(); benchmark::Initialize(&argc,argv);
   if(benchmark::ReportUnrecognizedArguments(argc,argv)) return 1;
+  benchmark::AddCustomContext("google_benchmark_version",PPKR_BENCHMARK_VERSION);
   benchmark::RunSpecifiedBenchmarks(); benchmark::Shutdown();
 }

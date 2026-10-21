@@ -40,8 +40,8 @@ ctest --test-dir build-correctness --output-on-failure
 ./build-correctness/lifecycle_demo
 ```
 
-CTest contains four test groups: `oprf_correctness`, `protocol_correctness`,
-`backup_correctness`, and `sas_correctness`. The lifecycle demo initializes a
+CTest contains five test groups: `oprf_correctness`, `protocol_correctness`,
+`backup_correctness`, `sas_correctness`, and `evaluation_correctness`. The lifecycle demo initializes a
 record, backs up the device secret with a 3-of-5 guardian configuration, restores
 it into a new device using guardians 1,3,5, and uses that device to recover and
 deliver the original file key to a client. It prints checks, not secret keys.
@@ -87,6 +87,7 @@ Recorded container environment: Ubuntu 24.04.3, GCC 13.3.0, libsodium 1.0.18,
 OpenSSL 3.0.13. Release correctness checks and the full lifecycle demo passed.
 The current recorded executable check counts are 4,808 OPRF, 526 initialization/
 recovery/component, 1,152 backup/restoration/lifecycle, and 4,706 SAS checks.
+A further 80 evaluation workload/accounting checks passed.
 Debug ASan/UBSan tests also passed with leak detection disabled because of the
 container's process-information restriction; leak detection remains unverified.
 These results are correctness evidence, not performance measurements.
@@ -103,7 +104,8 @@ the initial ideal-interface backup experiments.
 
 ## Performance evaluation status
 
-Only OPRF microbenchmarks currently exist. To build and run them with Google
+Four protocol benchmarks, OPRF microbenchmarks, and a communication/storage
+accounting profile are available. For a first local smoke run with Google
 Benchmark installed:
 
 ```sh
@@ -111,13 +113,12 @@ cmake -S . -B build-benchmark -DCMAKE_BUILD_TYPE=Release \
   -DPPKR_BUILD_BENCHMARKS=ON
 cmake --build build-benchmark -j
 mkdir -p results
-./build-benchmark/oprf_bench --benchmark_repetitions=10 \
-  --benchmark_min_time=0.5s \
-  --benchmark_out=results/oprf.json --benchmark_out_format=json
+python3 scripts/run_evaluation.py --build-dir build-benchmark --mode smoke
 ```
 
-Full-protocol benchmarks, communication/storage accounting and guardian-count/
-threshold experiments are still pending. No paper-ready timings, real HSM
-measurements or human confirmation-time results are published. Software HSM-role
-computation must not be described as physical HSM latency. Formal measurements
-must record actual hardware, dependency versions, build flags and CPU settings.
+See [EVALUATION.md](docs/EVALUATION.md) for timing boundaries, guardian/threshold
+matrix, byte-count conventions, output artifacts and formal-run instructions.
+Size values describe a specified application encoding and logical records, not
+measured wire traffic or process memory. Formal hardware data collection and
+analysis are still pending. No paper-ready timings, real HSM measurements or
+human confirmation-time results are published.
