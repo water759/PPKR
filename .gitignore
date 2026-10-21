@@ -1,0 +1,46 @@
+# CMake build directories
+/build/
+/cmake-build-*/
+
+# CMake generated files
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+compile_commands.json
+
+# Compiled binaries
+*.o
+*.a
+*.so
+*.out
+*.exe
+
+# IDE configuration
+.vscode/
+.idea/
+.cursor/
+
+# Python cache
+__pycache__/
+*.pyc
+.venv/
+
+# Conda
+.env
+
+# Benchmark output
+/results/*
+!/results/.gitkeep
+
+# Temporary files
+*.log
+*.tmp
+*~
+.DS_Store
+
+# Sensitive files
+*.pem
+*.key
+*.p12
+*.pfx
