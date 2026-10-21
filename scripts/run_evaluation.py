@@ -56,6 +56,8 @@ def main():
     parser.add_argument('--repetitions', type=int)
     parser.add_argument('--min-time', help='Google Benchmark duration, e.g. 0.5s')
     parser.add_argument('--filter', help='Google Benchmark regular expression')
+    parser.add_argument('--random-interleaving', action='store_true',
+                        help='Randomly interleave benchmark repetitions to reduce ordering bias')
     parser.add_argument('--cpu', type=int, help='Optional Linux logical CPU affinity; choose from actual topology')
     parser.add_argument('--output-dir', help='New directory; existing results are never overwritten')
     args = parser.parse_args()
@@ -105,6 +107,8 @@ def main():
             command = [str(executables[suite]), f'--benchmark_repetitions={repetitions}',
                        f'--benchmark_min_time={duration}', f'--benchmark_out={result_file}',
                        '--benchmark_out_format=json']
+            if args.random_interleaving:
+                command.append('--benchmark_enable_random_interleaving=true')
             if args.filter:
                 command.append(f'--benchmark_filter={args.filter}')
             manifest['benchmark_commands'].append(command)

@@ -122,3 +122,10 @@ Size values describe a specified application encoding and logical records, not
 measured wire traffic or process memory. Formal hardware data collection and
 analysis are still pending. No paper-ready timings, real HSM measurements or
 human confirmation-time results are published.
+
+## Level-3 comparison
+
+The Faller et al. (2024) Figure 4 OPRF-PPKR baseline is implemented only for
+initialization and recovery. See [docs/LEV3_BASELINE.md](docs/LEV3_BASELINE.md)
+for the common-library instantiation, channel abstractions, byte profile,
+four-case comparison commands and `scripts/compare_lev3.py` report.
