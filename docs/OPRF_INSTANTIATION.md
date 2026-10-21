@@ -5,7 +5,9 @@
 Inspected repository main commit 986b8ee3f7969f6cd9827b1b34576cfa2e785da2.
 It contained only placeholders, empty CMakeLists.txt/README, and .gitignore.
 Existing nonempty files and placeholders are retained. Only the empty root
-CMakeLists.txt is populated. No full protocol, KDF, rate limiter or transport is implemented.
+CMakeLists.txt was populated in the initial OPRF stage. The OPRF module itself
+contains no full protocol, KDF, rate limiter or transport. For the subsequent
+initialization/recovery module, see PROTOCOL_INSTANTIATION.md.
 
 Source: supplied Device-Assisted Password-Protected Key Retrieval with Compromise
 Containment PDF, Construction II.A/II.B, Figures 4/5, and device function in IV.

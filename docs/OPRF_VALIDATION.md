@@ -36,3 +36,20 @@ check, network/HSM integration, or full protocol test was performed.
 For repeatable local performance commands and remaining instantiation reviews,
 see OPRF_INSTANTIATION.md. The 280 cases include deterministic boundary inputs
 and random keys/blinds, so not all test executions are bit-for-bit deterministic.
+
+## Follow-up correctness review
+
+After the initial 3959-check run, tests were extended with an OpenSSL BN
+reference for modular inversion, applied to all 280 cases and the q-1 boundary.
+Added 256-byte input-length encoding checks and valid-but-altered response /
+mismatched blind checks. Production OPRF formulas and messages were unchanged.
+
+The updated Release executable reports:
+`PASS: 4808 checks; 280 randomized/boundary cases`.
+Release CTest passed 1/1. No performance run was requested or performed for
+this follow-up. The user's earlier local 3959-check success applies to the
+previous revision; the updated tests have so far run in the container only.
+The follow-up Debug ASan+UBSan run passed 1/1 with leak detection disabled
+for the previously documented container limitation. A fresh Release build with
+PPKR_BUILD_BENCHMARKS=OFF also passed 1/1 CTest, confirming correctness checks
+can run without Google Benchmark. No production protocol change was introduced.

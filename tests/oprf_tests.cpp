@@ -1,6 +1,8 @@
 #include "crypto/oprf.hpp"
 #include <sodium.h>
 #include <openssl/sha.h>
+#include <openssl/bn.h>
+#include <memory>
 #include <algorithm>
 #include <iostream>
 #include <stdexcept>
@@ -21,6 +23,26 @@ template<class F> void reject(F f) {
 void field(std::vector<unsigned char>& m, std::string_view s) {
   for(int i=7;i>=0;--i) m.push_back((static_cast<std::uint64_t>(s.size())>>(8*i))&255);
   m.insert(m.end(),s.begin(),s.end());
+}
+// Test-only independent scalar inversion; never used by production OPRF.
+Point reference_unblind(const Point& b, const Scalar& r) {
+  using Big = std::unique_ptr<BIGNUM, decltype(&BN_clear_free)>;
+  using Context = std::unique_ptr<BN_CTX, decltype(&BN_CTX_free)>;
+  // Decimal q independently specifies the field, rather than copying LE order bytes.
+  BIGNUM* raw_order=nullptr;
+  if (!BN_dec2bn(&raw_order,"7237005577332262213973186563042994240857116359379907606001950938285454250989"))
+    throw std::runtime_error("reference order allocation failed");
+  Big order(raw_order,BN_clear_free);
+  Big scalar(BN_lebin2bn(r.data(),r.size(),nullptr),BN_clear_free);
+  Context ctx(BN_CTX_new(),BN_CTX_free);
+  if (!scalar || !ctx) throw std::runtime_error("reference allocation failed");
+  Big inverse(BN_mod_inverse(nullptr,scalar.get(),order.get(),ctx.get()),BN_clear_free);
+  if (!inverse) throw std::runtime_error("reference inversion failed");
+  Scalar bytes{};
+  check(BN_bn2lebinpad(inverse.get(),bytes.data(),bytes.size())==static_cast<int>(bytes.size()));
+  Point result{};
+  check(crypto_scalarmult_ristretto255(result.data(),bytes.data(),b.data())==0);
+  return result;
 }
 Output reference(std::string_view x, const Scalar& k, bool device) {
   std::vector<unsigned char> m; field(m,device?"PPKR-2HashDH-v1/H1":"PPKR-2HashDH-v1/H3"); field(m,x);
@@ -45,6 +67,16 @@ try {
   check(encode_input("ab","c")!=encode_input("a","bc"));
   check(encode_input(std::string("a\0b",3),"c")!=encode_input("a","c"));
   check(encode_input("","").size()==16);
+  const auto encoded=encode_input(std::string(256,'p'),"i");
+  check(encoded.size()==273);
+  check(static_cast<unsigned char>(encoded[6])==1 && encoded[7]==0);
+  check(static_cast<unsigned char>(encoded[271])==1 && encoded[272]=='i');
+  // Valid but altered replies remain valid group elements: this is not a VOPRF.
+  const auto req=hsm_blind(x,one);
+  const auto reply=hsm_evaluate(req,two);
+  check(hsm_finalize(x,reply,one)==hsm_direct(x,two));
+  check(hsm_finalize(x,reply,one)!=hsm_direct(x,one));
+  check(hsm_finalize(x,reply,two)!=hsm_finalize(x,reply,one));
   std::vector<std::string> inputs{"",x,encode_input("","id"),encode_input("pw",""),
     encode_input(std::string("p\0w",3), std::string("i\0d",3)),encode_input("口令","用户"),std::string(4096,'x')};
   for(const auto& input:inputs) for(int i=0;i<40;++i) {
@@ -54,6 +86,7 @@ try {
     auto p=hash_to_group(Domain::Hsm,input);
     check(crypto_scalarmult_ristretto255(expected.data(),k.data(),p.data())==0);
     check(z==expected);
+    check(z==reference_unblind(b,r));
     const auto out=hsm_finalize(input,b,r);
     check(out==hsm_direct(input,k)); check(out==reference(input,k,false));
     check(device_evaluate(input,k)==reference(input,k,true));
@@ -72,6 +105,8 @@ try {
   auto last=q; --last[0];
   check(hsm_finalize(x,hsm_evaluate(hsm_blind(x,last),last),last)==hsm_direct(x,last));
   check(device_evaluate(x,last)==reference(x,last,true));
+  const auto last_reply=hsm_evaluate(hsm_blind(x,last),last);
+  check(hsm_unblind(last_reply,last)==reference_unblind(last_reply,last));
   for(const auto& bad:{zero,q,noncanonical}) {
     reject([&]{device_evaluate(x,bad);}); reject([&]{hsm_blind(x,bad);});
     reject([&]{hsm_evaluate(p,bad);}); reject([&]{hsm_unblind(p,bad);});
