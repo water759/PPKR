@@ -33,10 +33,6 @@ Bytes ack_message(const ShareContext& c,const Bytes& ciphertext){
 }
 void wipe(Bytes& b){if(!b.empty())sodium_memzero(b.data(),b.size());}
 }
-std::optional<AuthenticatedMessage> ideal_sas_confirm(const Bytes& a,const Bytes& b,bool confirms){
-  if(!confirms||a!=b)return std::nullopt;
-  return AuthenticatedMessage(a);
-}
 Bytes encode_context(const ShareContext& c){
   return crypto::encode({c.id,crypto::view(c.version),number(c.threshold),number(c.count),number(c.index),crypto::view(c.x),crypto::view(c.code),crypto::view(c.nonce)});
 }

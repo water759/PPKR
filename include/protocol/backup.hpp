@@ -1,17 +1,9 @@
 #pragma once
 #include "protocol/core.hpp"
+#include "protocol/sas.hpp"
 #include "crypto/shamir.hpp"
 #include <set>
 namespace ppkr::protocol {
-// Ideal SAS-MA functionality for correctness simulation, not a short-code protocol.
-class AuthenticatedMessage {
-  Bytes value;
-  explicit AuthenticatedMessage(Bytes bytes):value(std::move(bytes)){}
-  friend std::optional<AuthenticatedMessage> ideal_sas_confirm(const Bytes&,const Bytes&,bool);
-public:
-  bool matches(const Bytes& bytes)const{return value==bytes;}
-};
-std::optional<AuthenticatedMessage> ideal_sas_confirm(const Bytes& sender,const Bytes& verifier,bool user_confirms);
 struct BackupMetadata {
   std::string id; Key version; std::size_t threshold,count;
   std::map<std::uint64_t,Scalar> coordinates;

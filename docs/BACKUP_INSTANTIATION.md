@@ -2,7 +2,8 @@
 
 Authoritative source: supplied paper Construction II.C/II.D and Figures 6/7.
 This stage completes the core sequential flows of the four protocols. It does
-not implement a network service or a deployable SAS-MA protocol.
+not implement a network service or physical OOB transport. The concrete SAS-MA
+implementation is documented in SAS_INSTANTIATION.md.
 
 ## Construction correspondence
 
@@ -66,26 +67,17 @@ Counts use host size_t and indices use uint64_t. On the supported 64-bit Ubuntu
 target, representable counts are automatically below q; tests use small sets.
 No arbitrary-precision participant counts or large-scale allocation claim.
 
-## SAS-MA is an explicit abstract dependency
+## Concrete SAS-MA dependency
 
-The PDF specifies SAS-MA as a primitive, without a concrete commit/exchange/
-short-code algorithm in these Construction steps. ideal_sas_confirm is a
-correctness-testing functionality: it creates AuthenticatedMessage only when
-the sender/verifier payloads match exactly and user_confirms is true. Each
-receiving party then checks the evidence against its independently constructed
-payload. Guardian owner recognition and recovery approval are separate explicit
-inputs, not inferred from a rendezvous code or an encryption public key.
+SasSender/SasVerifier now implement Vaudenay 2005 Figure 5, using the hash-based
+commitment instantiation from Example 2. See SAS_INSTANTIATION.md for exact
+parameters, encoding, security assumptions and the retained human/OOB boundary.
+Backup authenticates guardian -> device; restoration authenticates replacement
+-> guardian. Only SasVerifier can construct the evidence accepted by the existing
+backup/restoration methods. The caller retains responsibility for OOB peer
+identity, confirmation and guardian owner recognition/approval.
 
-In the recovery harness, the sender payload is handed to this ideal functionality
-and Guardian::release_share checks it against the guardian's actual local
-payload. That models primitive-level context authentication; it is not a
-concrete network SAS exchange, human recognition system, or short-code security
-implementation. A public hash truncated to digits is deliberately not presented
-as SAS-MA. No false-acceptance probability or epsilon_auth measurement is claimed.
-The ideal interface cannot be used as a deployed authentication mechanism.
-
-The randomly generated rendezvous token likewise represents connection setup,
-not a human-friendly displayed code format or endpoint authentication.
+Rendezvous tokens remain connection-setup handles, not endpoint authentication.
 
 ## Erasure, scope and limits
 
@@ -106,7 +98,7 @@ external adversarial-model condition, not an implemented server integrity
 mechanism. Structural rejection tests do not extend the security claims to
 attacker-substituted valid shares or add retry/availability guarantees.
 
-Persistence, actual QR/SAS displays, Bluetooth and network transport remain
+Persistence, actual QR/peer-to-peer SAS displays, Bluetooth and network transport remain
 abstract. No physical HSM/device measurement, SAS user study, formal proof audit,
 full wire serialization or large-guardian performance result is claimed.
 

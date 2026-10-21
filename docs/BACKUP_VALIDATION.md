@@ -52,3 +52,11 @@ not demonstrate a deployed short-code protocol, proof-game security, validity
 of substituted shares outside ShareRoute, real HSM isolation, arbitrary
 concurrency or measured latency/throughput. Instantiation and abstraction
 choices are detailed in BACKUP_INSTANTIATION.md.
+
+
+## Subsequent concrete SAS implementation
+
+The above describes the initial backup-stage run. Current tests and the lifecycle
+demo now execute the concrete Vaudenay 2005 Figure 5 SAS protocol. Only OOB delivery
+and human approval are simulated. See SAS_VALIDATION.md and SAS_INSTANTIATION.md;
+the initial ideal-interface description is historical, not the current library API.

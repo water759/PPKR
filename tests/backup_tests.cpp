@@ -4,6 +4,21 @@
 #include <algorithm>
 using namespace ppkr;using namespace ppkr::protocol;
 namespace {
+// Automated harness: only delivery of the sender's authenticated short code and
+// the user's approval are simulated; all three insecure-channel moves execute.
+std::optional<AuthenticatedMessage> run_sas(const crypto::Bytes& sender_message,
+    const crypto::Bytes& expected_message,bool user_confirms) {
+  SasSender sender(sender_message); SasVerifier verifier;
+  auto first=sender.begin(); auto challenge=verifier.receive(first);
+  if(!challenge) return std::nullopt;
+  auto opening=sender.open(*challenge);
+  if(!opening || !verifier.receive(*opening)) return std::nullopt;
+  auto authenticated_code=sender.display_code();
+  if(!authenticated_code) return std::nullopt;
+  auto evidence=verifier.confirm(*authenticated_code,user_confirms);
+  if(!evidence || !evidence->matches(expected_message)) return std::nullopt;
+  return evidence;
+}
 int checks=0;
 void check(bool yes){++checks;if(!yes)throw std::runtime_error("check "+std::to_string(checks)+" failed");}
 template<class F>void reject(F f){bool bad=false;try{f();}catch(const std::invalid_argument&){bad=true;}check(bad);}
@@ -17,7 +32,7 @@ struct Fixture {
     for(std::uint64_t j=1;j<=n;++j){
       auto code=server.request_code("D");check(server.rendezvous(code,"G").has_value());check(!server.rendezvous(code,"G"));
       auto init=server.relay(backup.begin_guardian(j,code));auto keys=server.relay(guardians[j-1].begin_backup(init,code,true));
-      auto evidence=ideal_sas_confirm(guardians[j-1].backup_sas_message(),backup.recipient_sas_message(j,keys),true);check(evidence.has_value());
+      auto evidence=run_sas(guardians[j-1].backup_sas_message(),backup.recipient_sas_message(j,keys),true);check(evidence.has_value());
       auto ciphertext=backup.encrypt_share(j,keys,*evidence);check(ciphertext.has_value());
       auto ack=guardians[j-1].store_share(server.relay(*ciphertext));check(ack.has_value());
       auto bad=*ack;bad.signature[0]^=1;check(!backup.accept_ack(j,bad));
@@ -34,7 +49,7 @@ struct Fixture {
       auto code=server.request_code("replacement");check(server.rendezvous(code,"G").has_value());
       auto request=pending.begin_guardian(j,code);auto response=guardians[j-1].begin_recovery(request,code);check(response.has_value());
       auto message=pending.recipient_sas_message(j,*response);check(message.has_value());
-      auto evidence=ideal_sas_confirm(*message,*message,true);check(evidence.has_value());
+      auto evidence=run_sas(*message,*message,true);check(evidence.has_value());
       const auto count=guardians[j-1].records.size();
       auto ciphertext=guardians[j-1].release_share(pending.recipient_key(),*evidence,true,true);check(ciphertext.has_value());
       check(guardians[j-1].records.size()==count);check(pending.accept_share(j,*ciphertext));
@@ -72,7 +87,7 @@ void arithmetic(){
   reject([&]{shamir::reconstruct({});});reject([&]{shamir::split({},0,2);});reject([&]{shamir::split({},3,2);});
 }
 void sas_and_binding(){
-  check(!ideal_sas_confirm({1},{2},true));check(!ideal_sas_confirm({1},{1},false));
+  check(!run_sas({1},{2},true));check(!run_sas({1},{1},false));
   Device device;device.records.emplace("id",DeviceRecord{oprf::random_scalar(),{0,0}});
   for(int which=0;which<5;++which){
     DeviceBackup backup(device,"id",1,1);Guardian g;auto code=crypto::random_key();auto init=backup.begin_guardian(1,code);
@@ -82,15 +97,15 @@ void sas_and_binding(){
     if(which==2)altered.encryption=crypto::encryption_keygen().pk;
     if(which==3)altered.acknowledgment=crypto::random_key();
     if(which==4)altered.nonce[0]^=1;
-    check(!ideal_sas_confirm(g.backup_sas_message(),backup.recipient_sas_message(1,altered),true));check(!backup.complete());
+    check(!run_sas(g.backup_sas_message(),backup.recipient_sas_message(1,altered),true));check(!backup.complete());
   }
   Fixture f(2,3);
   for(int which=0;which<5;++which){
     DeviceRestoration r(f.metadata,{1,2});auto code=crypto::random_key();auto init=r.begin_guardian(1,code);
     auto response=*f.guardians[0].begin_recovery(init,code);auto msg=*r.recipient_sas_message(1,response);
-    auto proof=*ideal_sas_confirm(msg,msg,true);auto pk=r.recipient_key();
+    auto proof=*run_sas(msg,msg,true);auto pk=r.recipient_key();
     if(which==0)pk=crypto::encryption_keygen().pk;
-    if(which==1)proof=*ideal_sas_confirm(crypto::encode({"other context"}),crypto::encode({"other context"}),true);
+    if(which==1)proof=*run_sas(crypto::encode({"other context"}),crypto::encode({"other context"}),true);
     auto ciphertext=f.guardians[0].release_share(pk,proof,which!=2,which!=3);
     if(which<4)check(!ciphertext);
     else {check(ciphertext.has_value());ciphertext->back()^=1;check(!r.accept_share(1,*ciphertext));}
@@ -107,8 +122,8 @@ void recovery_boundaries(){
     DeviceRestoration r(f.metadata,{1,2});auto code=crypto::random_key();auto init=r.begin_guardian(1,code);
     auto response=*f.guardians[0].begin_recovery(init,code);
     if(which==0){++response.threshold;check(!r.recipient_sas_message(1,response));
-      auto dummy=*ideal_sas_confirm({1},{1},true);check(!f.guardians[0].release_share(r.recipient_key(),dummy,true,true));continue;}
-    auto msg=*r.recipient_sas_message(1,response);auto proof=*ideal_sas_confirm(msg,msg,true);
+      auto dummy=*run_sas({1},{1},true);check(!f.guardians[0].release_share(r.recipient_key(),dummy,true,true));continue;}
+    auto msg=*r.recipient_sas_message(1,response);auto proof=*run_sas(msg,msg,true);
     auto ciphertext=*f.guardians[0].release_share(r.recipient_key(),proof,true,true);
     if(which==1){check(r.accept_share(1,ciphertext));check(!r.accept_share(1,ciphertext));}
     else if(which==2){check(r.accept_share(1,ciphertext));Device replacement;check(!r.restore(replacement,20));check(replacement.records.empty());}
