@@ -52,7 +52,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--build-dir', default='build-eval')
     parser.add_argument('--mode', choices=['smoke', 'measurement'], default='smoke')
-    parser.add_argument('--suite', choices=['protocols', 'oprf', 'all'], default='protocols')
+    parser.add_argument('--suite', choices=['protocols', 'oprf', 'breakdown', 'all'], default='protocols')
     parser.add_argument('--repetitions', type=int)
     parser.add_argument('--min-time', help='Google Benchmark duration, e.g. 0.5s')
     parser.add_argument('--filter', help='Google Benchmark regular expression')
@@ -67,7 +67,8 @@ def main():
         parser.error('positive repetitions and a positive duration such as 0.5s are required')
     build = (ROOT / args.build_dir).resolve()
     suites = ['protocols', 'oprf'] if args.suite == 'all' else [args.suite]
-    executables = {'protocols': build / 'protocol_bench', 'oprf': build / 'oprf_bench'}
+    executables = {'protocols': build / 'protocol_bench', 'oprf': build / 'oprf_bench',
+                   'breakdown': build / 'recovery_breakdown_bench'}
     required = [build / 'protocol_sizes'] + [executables[s] for s in suites]
     for exe in required:
         if not exe.is_file() or not os.access(exe, os.X_OK):

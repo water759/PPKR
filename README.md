@@ -129,3 +129,8 @@ The Faller et al. (2024) Figure 4 OPRF-PPKR baseline is implemented only for
 initialization and recovery. See [docs/LEV3_BASELINE.md](docs/LEV3_BASELINE.md)
 for the common-library instantiation, channel abstractions, byte profile,
 four-case comparison commands and `scripts/compare_lev3.py` report.
+
+Recovery component diagnostics are available separately with `--suite breakdown`;
+see [docs/RECOVERY_BREAKDOWN.md](docs/RECOVERY_BREAKDOWN.md). They preserve the
+existing total-cost workloads and include eight method segments and two overlapping
+primitive diagnostics.
