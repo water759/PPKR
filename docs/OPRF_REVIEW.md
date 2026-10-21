@@ -38,7 +38,8 @@ compatibility. This review makes no change to the paper or protocol model.
 The group size, output lengths, tuple serialization, secret-buffer ownership
 and software-only HSM timing are documented in OPRF_INSTANTIATION.md.
 This review covers only OPRF. Subsequent initialization/recovery work is described
-in PROTOCOL_INSTANTIATION.md; backup and device restoration remain unimplemented.
+in PROTOCOL_INSTANTIATION.md; subsequent backup/restoration work is described
+in BACKUP_INSTANTIATION.md.
 
 ## Work possible before formal performance measurements
 

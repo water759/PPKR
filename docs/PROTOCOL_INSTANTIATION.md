@@ -11,7 +11,8 @@ summaries. The author-confirmed nonzero recovery blind correction is retained.
 Implementation is a sequential, in-memory research prototype: typed messages
 between separate Device/Hsm objects, with explicit Server::relay. No real HSM,
 Bluetooth, networking, persistent database, QR image decoder or UI is included.
-No backup/restoration implementation is introduced in this stage.
+This document describes the earlier initialization/recovery stage; subsequent
+backup/restoration implementation is described in BACKUP_INSTANTIATION.md.
 
 ## Mathematical construction to functions
 
