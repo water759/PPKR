@@ -1,5 +1,6 @@
 #include "evaluation/workload.hpp"
 #include "evaluation/lev3.hpp"
+#include "evaluation/wbp.hpp"
 #include <benchmark/benchmark.h>
 #include <memory>
 using namespace ppkr::evaluation;
@@ -28,7 +29,15 @@ void DeviceBackupCpu(benchmark::State& s){operation(s,Stage::DeviceBackup);}
 void DeviceRestorationCpu(benchmark::State& s){operation(s,Stage::DeviceRestoration);}
 void Lev3InitializationCpu(benchmark::State& s){operation<Lev3Workload>(s,Stage::Initialization);}
 void Lev3KeyRecoveryCpu(benchmark::State& s){operation<Lev3Workload>(s,Stage::KeyRecovery);}
+void WbpInitializationCpu(benchmark::State& s){operation<wbp::Workload>(s,Stage::Initialization);}
+void WbpKeyRecoveryCpu(benchmark::State& s){operation<wbp::Workload>(s,Stage::KeyRecovery);}
+void WbpAttestedInitializationCpu(benchmark::State& s){operation<wbp::AttestedWorkload>(s,Stage::Initialization);}
+void WbpAttestedKeyRecoveryCpu(benchmark::State& s){operation<wbp::AttestedWorkload>(s,Stage::KeyRecovery);}
 void matrix(benchmark::internal::Benchmark* b){for(auto [n,t]:scenarios())b->Args({static_cast<std::int64_t>(n),static_cast<std::int64_t>(t)});b->ArgNames({"n","t"});}
+BENCHMARK(WbpInitializationCpu)->Unit(benchmark::kMicrosecond);
+BENCHMARK(WbpKeyRecoveryCpu)->Unit(benchmark::kMicrosecond);
+BENCHMARK(WbpAttestedInitializationCpu)->Unit(benchmark::kMicrosecond);
+BENCHMARK(WbpAttestedKeyRecoveryCpu)->Unit(benchmark::kMicrosecond);
 BENCHMARK(Lev3InitializationCpu)->Unit(benchmark::kMicrosecond);
 BENCHMARK(Lev3KeyRecoveryCpu)->Unit(benchmark::kMicrosecond);
 BENCHMARK(InitializationCpu)->Unit(benchmark::kMicrosecond);
@@ -43,5 +52,6 @@ int main(int argc,char** argv){
   benchmark::AddCustomContext("google_benchmark_version",PPKR_BENCHMARK_VERSION);
   benchmark::AddCustomContext("scope","single-process sequential software work; setup/validation excluded; human and network delay excluded");
   benchmark::AddCustomContext("baseline", "Faller et al. 2024 Figure 4 Level-3; software reimplementation; channels idealized; see docs/LEV3_BASELINE.md");
+  benchmark::AddCustomContext("wbp", "Davies et al. CRYPTO 2023 Figures 4/5; core excludes attestation like existing baselines; WbpAttested includes HSM signatures; see docs/WBP_BASELINE.md");
   benchmark::RunSpecifiedBenchmarks();benchmark::Shutdown();
 }

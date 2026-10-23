@@ -9,7 +9,7 @@ struct Traffic {
   std::uint64_t sas_bits=0,sas_checks=0,rendezvous_bits=0,qr_bytes=0;
   std::uint64_t ordinary_bytes()const{return 2*relayed_bytes+server_bytes+direct_bytes;}
 };
-struct Storage {std::uint64_t device=0,hsm=0,guardians=0,metadata=0,client_output=0;};
+struct Storage {std::uint64_t device=0,hsm=0,guardians=0,metadata=0,client_output=0,account_mapping=0;};
 // Fixed profile of logical records/messages for size accounting, not a transport codec.
 class Workload {
   Config config;

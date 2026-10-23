@@ -134,3 +134,12 @@ Recovery component diagnostics are available separately with `--suite breakdown`
 see [docs/RECOVERY_BREAKDOWN.md](docs/RECOVERY_BREAKDOWN.md). They preserve the
 existing total-cost workloads and include eight method segments and two overlapping
 primitive diagnostics.
+
+## WBP comparison
+
+The Davies et al. CRYPTO 2023 WBP initialization/recovery software baseline is
+available alongside the original Level-3 and device-assisted workloads. See
+[docs/WBP_BASELINE.md](docs/WBP_BASELINE.md) for source alignment, concrete
+3DH/HKDF choices, abstract-channel versus signed modes, byte accounting, and
+the six-case comparison command. `scripts/compare_wbp.py` prints one compact
+three-scheme table with units in each cell.

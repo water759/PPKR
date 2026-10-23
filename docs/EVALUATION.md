@@ -29,7 +29,7 @@ Artifacts:
 |---|---|
 | protocols.json | Google Benchmark per-repetition data plus aggregates |
 | protocols.log | Benchmark stdout/stderr, including warnings |
-| protocol_sizes.csv | Application encoding and logical-record size profile, 30 rows |
+| protocol_sizes.csv | Application encoding and logical-record size profile, 34 rows |
 | environment.json | Mode, revision, binary hashes, compiler/build flags, library version, affinity, CPU/governor/power/load snapshots and commands |
 
 The script checks that benchmarks actually matched the filter and did not
@@ -77,8 +77,9 @@ rate-limit behavior are correctness-tested, not represented as successful timing
 
 Matrix: (n,t) = (1,1), (3,1), (3,2), (3,3), (5,1), (5,3), (5,5),
 (10,1), (10,6), (10,10), (20,1), (20,11), (20,20).
-There are 30 benchmark cases: two base protocols, two Level-3 baselines,
-13 backup and 13 restoration cases. Restoration selects indices 1..t. The threshold/guardian matrix can be
+There are 34 benchmark cases: two base protocols, two Level-3 baselines,
+four WBP cases (with/without concrete attestation), 13 backup and 13 restoration
+cases. See [WBP_BASELINE.md](WBP_BASELINE.md) for the six-case primary comparison. Restoration selects indices 1..t. The threshold/guardian matrix can be
 extended in evaluation::scenarios without modifying protocol logic.
 
 ## Communication accounting profile
